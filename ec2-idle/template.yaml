@@ -6,17 +6,6 @@ Description: >
   Sample SAM Template for ec2-idle
 
 Resources:
-  #  EC2IdleManagerPolicy:
-  #    Type: AWS::IAM::Policy
-  #    Properties:
-  #      PolicyName: EC2IdleManager
-  #      PolicyDocument:
-  #        Version: "2012-10-17"
-  #        Statement:
-  #          - Effect: Allow
-  #            Action: ["ec2:DescribeInstances", "ec2:StopInstances"]
-  #            Resource: "*" #InstanceProfile:
-
   TriggerFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:

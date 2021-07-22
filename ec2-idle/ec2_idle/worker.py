@@ -8,15 +8,12 @@ def worker_handler(event, context):
 
     s3Client = boto3.client("s3")
     # Download private key file from secure S3 bucket
-    # s3Client.download_file('fdotech','ssh_keys/chris2.pem', '/tmp/keyname.pem')
-    # k = paramiko.RSAKey.from_private_key_file("/tmp/keyname.pem")
-
-    # s3Client.download_file("fdotech", "ssh_keys/chris2.pem", "/tmp/keyname.pem")
-    s3Client.download_file("fdotech", "ssh_keys/chris2.pem", "y:\\keyname.pem")
+    s3Client.download_file("fdotech", "ssh_keys/chris2.pem", "/tmp/keyname.pem")
+    #s3Client.download_file("fdotech", "ssh_keys/chris2.pem", "y:\\keyname.pem")
     logging.warning("%s: Got pem file from S3", event["IP"])
 
-    # k = paramiko.RSAKey.from_private_key_file("/tmp/keyname.pem")
-    k = paramiko.RSAKey.from_private_key_file("y:\\keyname.pem")
+    k = paramiko.RSAKey.from_private_key_file("/tmp/keyname.pem")
+    #k = paramiko.RSAKey.from_private_key_file("y:\\keyname.pem")
     c = paramiko.SSHClient()
 
     c.set_missing_host_key_policy(paramiko.AutoAddPolicy())

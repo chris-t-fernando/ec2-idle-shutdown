@@ -90,12 +90,15 @@ def trigger_handler(event, context):
         logging.warning(
             "{host}: Invoking worker_function".format(host=host["PrivateIpAddress"])
         )
+        payload = json.dumps(jsonPayload)
+        logging.warning("{host}: Payload set".format(host=host["PrivateIpAddress"]))
         invokeResponse = lambdaClient.invoke(
             # FunctionName="worker_function",
             FunctionName="arn:aws:lambda:us-west-2:036372598227:function:ec2-idle-WorkerFunction-FVTGj1iqS1LH",
-            InvocationType="RequestResponse",
+            # InvocationType="RequestResponse",
+            InvocationType="Event",
             LogType="Tail",
-            Payload=json.dumps(jsonPayload),
+            Payload=payload,
         )
         logging.warning(
             "{host}: Finished.  Response: {response}".format(
