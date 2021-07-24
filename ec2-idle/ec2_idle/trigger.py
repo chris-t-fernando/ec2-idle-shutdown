@@ -11,38 +11,32 @@ def isIdleExempt(instance):
                 if str(t["Value"]).upper() == "TRUE":
                     # true - exempt from idle shutdown
                     logging.warning(
-                        "%s: Instance is exempt from idle shutdown",
-                        instance["InstanceId"],
+                        f"{instance['InstanceId']}: Instance is exempt from idle shutdown"
                     )
                     return True
 
                 elif str(t["Value"]).upper() == "FALSE":
                     logging.warning(
-                        "%s: Instance is explicitly NOT exempt from idle shutdown",
-                        instance["InstanceId"],
+                        f"{instance['InstanceId']}: Instance is explicitly NOT exempt from idle shutdown"
                     )
                     return False
 
                 else:
                     logging.warning(
-                        "%s: Found unrecognised tag value: %s.  Defaulting to NOT exempt",
-                        instance["InstanceId"],
-                        t["Value"],
+                        f"{instance['InstanceId']}: Found unrecognised tag value: {t['Value']}.  Defaulting to NOT exempt"
                     )
                     return False
 
         # there were tags, but not the one we're looking for
         logging.warning(
-            "%s: Did not find tag IDLE_EXEMPT.  Defaulting to NOT exempt",
-            instance["InstanceId"],
+            f"{instance['InstanceId']}: Did not find tag IDLE_EXEMPT.  Defaulting to NOT exempt"
         )
         return False
 
     except Exception as e:
         # no tags, so default to not idle exempt
         logging.warning(
-            "%s: No tags on this instance, so did not find tag IDLE_EXEMPT.  Defaulting to NOT exempt",
-            instance["InstanceId"],
+            f"{instance['InstanceId']}: No tags on this instance, so did not find tag IDLE_EXEMPT.  Defaulting to NOT exempt",
         )
         return False
 
@@ -61,23 +55,23 @@ def trigger_handler(event, context):
     instDict = ec2Client.describe_instances()
     logging.warning("Ran describe instances")
     try:
-        logging.warning("Found {len} reservations".format(len=len(instDict)))
+        logging.warning(f"Found {len(instDict)} reservations")
         for r in instDict["Reservations"]:
-            logging.warning("Found {len} instances".format(len=len(r)))
+            logging.warning(f"Found {len(r)} instances")
             for i in r["Instances"]:
                 if isIdleExempt(instance=i):
                     logging.warning(
-                        "%s: Instance is idle exempt, skipping", i["InstanceId"]
+                        f"{i['InstanceId']}: Instance is idle exempt, skipping"
                     )
                 else:
-                    logging.warning("%s: Instance is NOT idle exempt", i["InstanceId"])
+                    logging.warning(f"{i['InstanceId']}: Instance is NOT idle exempt")
                     matchedInstances.append(i)
     except Exception as e:
         logging.error(
             "Did not find Reservations or Instances key in Dictionary.  Terminating."
         )
         logging.error(str(e))
-        return False
+        raise
 
     logging.warning("Finished iterating ec2 instances, now beginning invoke")
     # Invoke worker function for each IP address
@@ -87,28 +81,22 @@ def trigger_handler(event, context):
         jsonPayload["IP"] = host["PrivateIpAddress"]
         jsonPayload["InstanceId"] = host["InstanceId"]
 
-        logging.warning(
-            "{host}: Invoking worker_function".format(host=host["PrivateIpAddress"])
-        )
+        logging.warning(f"{host['PrivateIpAddress']}: Invoking worker_function")
         payload = json.dumps(jsonPayload)
-        logging.warning("{host}: Payload set".format(host=host["PrivateIpAddress"]))
+        logging.warning(f"{host['PrivateIpAddress']}: Payload set")
         invokeResponse = lambdaClient.invoke(
-            # FunctionName="worker_function",
-            FunctionName="arn:aws:lambda:us-west-2:036372598227:function:ec2-idle-WorkerFunction-FVTGj1iqS1LH",
-            # InvocationType="RequestResponse",
+            FunctionName="arn:aws:lambda:us-west-2:036372598227:function:ec2-idle-shutdown-WorkerFunction-w6PPXXX7z4xA:ec2-idle-worker",
             InvocationType="Event",
             LogType="Tail",
             Payload=payload,
         )
         logging.warning(
-            "{host}: Finished.  Response: {response}".format(
-                host=host["PrivateIpAddress"], response=invokeResponse
-            )
+            f"{host['PrivateIpAddress']}: Finished.  Response: {invokeResponse}"
         )
 
     logging.warning("trigger_handler complete")
 
-    return {"message": "Trigger function finished"}
+    return {"statusCode": 200, "body": json.dumps("Success")}
 
 
 if __name__ == "__main__":
