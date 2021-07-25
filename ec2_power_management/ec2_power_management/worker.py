@@ -82,7 +82,7 @@ def worker_handler(event, context):
     except:
         userIndex = uptimeList.index("user,") - 1
 
-    if int(uptimeList[userIndex]) > 0:
+    if int(uptimeList[userIndex]) > 1:
         # someone is logged in
         logging.warning(
             f"{host}: {uptimeList[userIndex]} user(s) are logged in - has not met users condition"
