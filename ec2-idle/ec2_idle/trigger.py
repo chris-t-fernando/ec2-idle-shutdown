@@ -52,7 +52,9 @@ def trigger_handler(event, context):
     #    )
 
     matchedInstances = []
-    instDict = ec2Client.describe_instances()
+    instDict = ec2Client.describe_instances(
+        Filters=[{"Name": "instance-state-name", "Values": ["running"]}]
+    )
     logging.warning("Ran describe instances")
     try:
         logging.warning(f"Found {len(instDict)} reservations")
@@ -73,6 +75,13 @@ def trigger_handler(event, context):
         logging.error(str(e))
         raise
 
+    if len(matchedInstances) == 0:
+        logging.warning("No instances online.  Finished successfully.")
+        return {
+            "statusCode": 200,
+            "body": json.dumps("No instances online.  Finished successfully."),
+        }
+
     logging.warning("Finished iterating ec2 instances, now beginning invoke")
     # Invoke worker function for each IP address
     lambdaClient = boto3.client("lambda")
@@ -85,7 +94,7 @@ def trigger_handler(event, context):
         payload = json.dumps(jsonPayload)
         logging.warning(f"{host['PrivateIpAddress']}: Payload set")
         invokeResponse = lambdaClient.invoke(
-            FunctionName="arn:aws:lambda:us-west-2:036372598227:function:ec2-idle-shutdown-WorkerFunction-w6PPXXX7z4xA:ec2-idle-worker",
+            FunctionName="arn:aws:lambda:us-west-2:036372598227:function:ec2-idle-shutdown-WorkerFunction-w6PPXXX7z4xA",
             InvocationType="Event",
             LogType="Tail",
             Payload=payload,

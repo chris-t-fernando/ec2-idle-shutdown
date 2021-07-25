@@ -43,7 +43,7 @@ def worker_handler(event, context):
         # up for less than an hour
         uptimeConditionMet = False
         logging.warning(
-            f"{host}: Server has been online for uptimeList[2] minutes - has not met uptime condition"
+            f"{host}: Server has been online for {uptimeList[2]} minutes - has not met uptime condition"
         )
     elif ":" in uptimeList[2]:
         # up for less than a day
