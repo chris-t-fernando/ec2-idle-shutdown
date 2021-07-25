@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  ec2 power management
+
+Resources:
+  TriggerFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: ec2_power_management/
+      Handler: trigger.trigger_handler
+      Timeout: 180
+      Tags:
+        Project: "platform"
+      Policies:
+        - Statement:
+            - Sid: EC2PowerManagerTriggerLambda
+              Effect: Allow
+              Action:
+                - lambda:InvokeFunction
+              Resource: !GetAtt WorkerFunction.Arn
+        - Statement:
+            - Sid: EC2PowerManagerTriggerEC2
+              Effect: Allow
+              Action:
+                - ec2:DescribeInstances
+                - ec2:StartInstances
+              Resource: "*"
+      Runtime: python3.8
+      VpcConfig:
+        SecurityGroupIds:
+          - sg-8b5c50ee
+        SubnetIds:
+          - subnet-6577a03c
+          - subnet-a752c0c2
+          - subnet-325eee45
+      Events:
+        IdleEC2Shutdown:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 hour)
+  WorkerFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: ec2_power_management/
+      Handler: worker.worker_handler
+      Timeout: 20
+      Tags:
+        Project: "platform"
+      Policies:
+        - Statement:
+            - Sid: EC2PowerManagerWorkerEC2
+              Effect: Allow
+              Action:
+                - ec2:StopInstances
+              Resource: "*"
+            - Sid: EC2PowerManagerWorkerS3
+              Effect: Allow
+              Action:
+                - s3:GetObject
+              Resource: "arn:aws:s3:::fdotech/*"
+      Runtime: python3.8
+      VpcConfig:
+        SecurityGroupIds:
+          - sg-8b5c50ee
+        SubnetIds:
+          - subnet-6577a03c
+          - subnet-a752c0c2
+          - subnet-325eee45
