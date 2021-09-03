@@ -82,6 +82,7 @@ def worker_handler(event, context):
     except:
         userIndex = uptimeList.index("user,") - 1
 
+    # >1 because jripper runs for more than an hour but will appear as 'idle'
     if int(uptimeList[userIndex]) > 1:
         # someone is logged in
         logging.warning(

@@ -181,14 +181,14 @@ def trigger_handler(event, context):
     lambdaClient = boto3.client("lambda")
     for host in matchedPowerOffInstances:
         jsonPayload = {}
-        jsonPayload["IP"] = host["PrivateIpAddress"]
+        jsonPayload["IP"] = host["PublicIpAddress"]
         jsonPayload["InstanceId"] = host["InstanceId"]
 
         logging.warning(
-            f"[Power off] {host['PrivateIpAddress']}: Invoking worker_function"
+            f"[Power off] {host['PublicIpAddress']}: Invoking worker_function"
         )
         payload = json.dumps(jsonPayload)
-        logging.warning(f"[Power off] {host['PrivateIpAddress']}: Payload set")
+        logging.warning(f"[Power off] {host['PublicIpAddress']}: Payload set")
         invokeResponse = lambdaClient.invoke(
             FunctionName="arn:aws:lambda:us-west-2:036372598227:function:ec2-power-management-WorkerFunction-xKBC7O6FaPHC",
             InvocationType="Event",
@@ -196,7 +196,7 @@ def trigger_handler(event, context):
             Payload=payload,
         )
         logging.warning(
-            f"[Power off] {host['PrivateIpAddress']}: Finished.  Response: {invokeResponse}"
+            f"[Power off] {host['PublicIpAddress']}: Finished.  Response: {invokeResponse}"
         )
     if len(matchedPowerOffInstances) == 0:
         logging.warning("[Power off] No instances online.  Finished successfully.")
